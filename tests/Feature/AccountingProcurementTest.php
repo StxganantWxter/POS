@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Procurement;
-use Modules\NsGastro\Tests\TestCase;
 use PHPUnit\Framework\Attributes\Depends;
+use Tests\TestCase;
 use Tests\Traits\WithAccountingTest;
 use Tests\Traits\WithAuthentication;
 use Tests\Traits\WithProcurementTest;
