@@ -1530,20 +1530,22 @@ class OrdersService
          * The stored value always holds the next code to assign, matching
          * the semantic used since the counter was introduced.
          */
+        /**
+         * the counter row for the day is seeded atomically first: relying on
+         * the unique index on the date column, concurrent first-orders-of-the-day
+         * collapse to a single row instead of one of them throwing a duplicate
+         * key error. The stored value always holds the next code to assign.
+         */
+        DB::table( $table )->insertOrIgnore( [
+            'date' => $today,
+            'count' => 1,
+        ] );
+
         $count = DB::transaction( function () use ( $table, $today ) {
             $row = DB::table( $table )
                 ->where( 'date', $today )
                 ->lockForUpdate()
                 ->first();
-
-            if ( $row === null ) {
-                DB::table( $table )->insert( [
-                    'date' => $today,
-                    'count' => 2,
-                ] );
-
-                return 1;
-            }
 
             DB::table( $table )
                 ->where( 'date', $today )

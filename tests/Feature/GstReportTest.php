@@ -39,7 +39,7 @@ class GstReportTest extends TestCase
             $orderProduct->hsn_code = $line[ 'hsn_code' ];
             $orderProduct->rate = $line[ 'rate' ];
             $orderProduct->quantity = $line[ 'quantity' ];
-            $orderProduct->unit_price = $line[ 'total_price' ] / $line[ 'quantity' ];
+            $orderProduct->unit_price = $line[ 'quantity' ] > 0 ? $line[ 'total_price' ] / $line[ 'quantity' ] : 0;
             $orderProduct->total_price = $line[ 'total_price' ];
             $orderProduct->total_price_net = $line[ 'total_price_net' ];
             $orderProduct->tax_value = $line[ 'tax_value' ];
@@ -91,6 +91,66 @@ class GstReportTest extends TestCase
 
         $this->assertNotNull( $beerRow, 'The report should include the beer HSN group.' );
         $this->assertEquals( 280, (float) $beerRow->tax_value );
+    }
+
+    public function test_gst_report_includes_net_of_refund_lines()
+    {
+        $this->attemptAuthenticate();
+
+        $hsn = 'R' . rand( 10000000, 99999999 );
+
+        /**
+         * a partial refund leaves the order product with status
+         * 'returned' and its quantity/tax already reduced to the kept
+         * (still sold) portion. That net supply must remain on the GST
+         * report; only the fully refunded (quantity 0) line drops out.
+         */
+        $this->createOrderWithProducts( [
+            // fully sold line
+            [ 'hsn_code' => $hsn, 'rate' => 18, 'quantity' => 2, 'total_price' => 1180, 'total_price_net' => 1000, 'tax_value' => 180 ],
+            // partially refunded line: kept 1 unit
+            [ 'hsn_code' => $hsn, 'rate' => 18, 'quantity' => 1, 'total_price' => 590, 'total_price_net' => 500, 'tax_value' => 90, 'status' => 'returned' ],
+            // fully refunded line: nothing kept
+            [ 'hsn_code' => $hsn, 'rate' => 18, 'quantity' => 0, 'total_price' => 0, 'total_price_net' => 0, 'tax_value' => 0, 'status' => 'returned' ],
+        ] );
+
+        $report = app()->make( ReportService::class )->getGstReport(
+            ns()->date->getNow()->startOfDay()->toDateTimeString(),
+            ns()->date->getNow()->endOfDay()->toDateTimeString()
+        );
+
+        $row = $report[ 'sales' ]->firstWhere( 'hsn_code', $hsn );
+
+        $this->assertNotNull( $row, 'The net-of-refund supply must remain on the report.' );
+        $this->assertEquals( 3, (float) $row->quantity, 'The kept quantity of a partially refunded line must be reported.' );
+        $this->assertEquals( 1500, (float) $row->taxable_value );
+        $this->assertEquals( 270, (float) $row->tax_value );
+    }
+
+    public function test_gst_report_derives_rate_from_tax_when_rate_column_is_zero()
+    {
+        $this->attemptAuthenticate();
+
+        $hsn = 'D' . rand( 10000000, 99999999 );
+
+        /**
+         * the POS flow does not persist the tax percentage on
+         * order_products.rate (it stays 0); the report must derive the
+         * effective rate from the tax and taxable values instead.
+         */
+        $this->createOrderWithProducts( [
+            [ 'hsn_code' => $hsn, 'rate' => 0, 'quantity' => 2, 'total_price' => 2360, 'total_price_net' => 2000, 'tax_value' => 360 ],
+        ] );
+
+        $report = app()->make( ReportService::class )->getGstReport(
+            ns()->date->getNow()->startOfDay()->toDateTimeString(),
+            ns()->date->getNow()->endOfDay()->toDateTimeString()
+        );
+
+        $row = $report[ 'sales' ]->firstWhere( 'hsn_code', $hsn );
+
+        $this->assertNotNull( $row );
+        $this->assertEquals( 18.0, (float) $row->rate, 'The effective GST rate must be derived from tax / taxable value.' );
     }
 
     public function test_gst_report_page_renders()
