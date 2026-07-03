@@ -47,6 +47,7 @@
       <directory suffix="StockLedgerIntegrityTest.php">./tests/Feature</directory>
       <directory suffix="LiquorCatalogTest.php">./tests/Feature</directory>
       <directory suffix="GstReportTest.php">./tests/Feature</directory>
+      <directory suffix="LiquorSetupCommandTest.php">./tests/Feature</directory>
       <directory suffix="CreateRegisterTest.php">./tests/Feature</directory>
       <directory suffix="CashRegisterActionsTest.php">./tests/Feature</directory>
     </testsuite>
