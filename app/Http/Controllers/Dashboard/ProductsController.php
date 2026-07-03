@@ -9,6 +9,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Classes\Hook;
+use App\Crud\BrandCrud;
 use App\Crud\ProductAdjustmentCrud;
 use App\Crud\ProductCrud;
 use App\Crud\ProductHistoryCrud;
@@ -19,6 +20,7 @@ use App\Exceptions\NotAllowedException;
 use App\Exceptions\NotFoundException;
 use App\Http\Controllers\DashboardController;
 use App\Http\Requests\ProductRequest;
+use App\Models\Brand;
 use App\Models\ProcurementProduct;
 use App\Models\Product;
 use App\Models\ProductAdjustment;
@@ -323,11 +325,26 @@ class ProductsController extends DashboardController
         return ProductCrud::table();
     }
 
+    public function listBrands()
+    {
+        return BrandCrud::table();
+    }
+
+    public function createBrand()
+    {
+        return BrandCrud::form();
+    }
+
+    public function editBrand( Brand $brand )
+    {
+        return BrandCrud::form( $brand );
+    }
+
     public function editProduct( Product $product )
     {
         ns()->restrict( [ 'nexopos.update.products' ] );
 
-        return view::make( 'pages.dashboard.products.create', [
+        return View::make( 'pages.dashboard.products.create', [
             'title' => __( 'Edit a product' ),
             'description' => __( 'Makes modifications to a product' ),
             'submitUrl' => ns()->url( '/api/products/' . $product->id ),
@@ -345,7 +362,7 @@ class ProductsController extends DashboardController
     {
         ns()->restrict( [ 'nexopos.create.products' ] );
 
-        return view::make( 'pages.dashboard.products.create', [
+        return View::make( 'pages.dashboard.products.create', [
             'title' => __( 'Create a product' ),
             'description' => __( 'Add a new product on the system' ),
             'submitUrl' => ns()->url( '/api/products' ),
@@ -403,9 +420,9 @@ class ProductsController extends DashboardController
         }
 
         return View::make( 'pages.dashboard.products.stock-adjustment', [
-            'title'       => __( 'Stock Adjustment' ),
+            'title' => __( 'Stock Adjustment' ),
             'description' => __( 'Adjust stock of existing products.' ),
-            'adjustment'  => $adjustment,
+            'adjustment' => $adjustment,
             'actions' => Helper::kvToJsOptions( [
                 ProductHistory::ACTION_ADDED => __( 'Add' ),
                 ProductHistory::ACTION_DELETED => __( 'Delete' ),
@@ -423,15 +440,15 @@ class ProductsController extends DashboardController
         }
 
         return View::make( 'pages.dashboard.products.stock-adjustment', [
-            'title'       => __( 'Edit Stock Adjustment' ),
+            'title' => __( 'Edit Stock Adjustment' ),
             'description' => __( 'Update this draft stock adjustment.' ),
-            'adjustment'  => $history->load( 'items' ),
+            'adjustment' => $history->load( 'items' ),
             'actions' => Helper::kvToJsOptions( [
-                ProductHistory::ACTION_ADDED     => __( 'Add' ),
-                ProductHistory::ACTION_DELETED   => __( 'Delete' ),
+                ProductHistory::ACTION_ADDED => __( 'Add' ),
+                ProductHistory::ACTION_DELETED => __( 'Delete' ),
                 ProductHistory::ACTION_DEFECTIVE => __( 'Defective' ),
-                ProductHistory::ACTION_LOST      => __( 'Lost' ),
-                ProductHistory::ACTION_SET       => __( 'Set' ),
+                ProductHistory::ACTION_LOST => __( 'Lost' ),
+                ProductHistory::ACTION_SET => __( 'Set' ),
             ] ),
         ] );
     }
@@ -558,9 +575,9 @@ class ProductsController extends DashboardController
          * Record the batch so it appears in the adjustment history.
          */
         $adjustment = ProductAdjustment::create( [
-            'author_id'   => auth()->id(),
-            'title'       => $request->input( 'title', '' ),
-            'status'      => ProductAdjustment::STATUS_PERFORMED,
+            'author_id' => auth()->id(),
+            'title' => $request->input( 'title', '' ),
+            'status' => ProductAdjustment::STATUS_PERFORMED,
             'description' => $request->input( 'description', '' ),
         ] );
 
@@ -680,7 +697,7 @@ class ProductsController extends DashboardController
 
     public function printLabels()
     {
-        return view::make( 'pages.dashboard.products.print-labels', [
+        return View::make( 'pages.dashboard.products.print-labels', [
             'title' => __( 'Print Labels' ),
             'description' => __( 'Customize and print products labels.' ),
         ] );
@@ -757,9 +774,9 @@ class ProductsController extends DashboardController
         );
 
         return [
-            'status'  => 'success',
+            'status' => 'success',
             'message' => __( 'The draft has been saved successfully.' ),
-            'data'    => [ 'adjustment' => $adjustment ],
+            'data' => [ 'adjustment' => $adjustment ],
         ];
     }
 
@@ -794,22 +811,22 @@ class ProductsController extends DashboardController
         );
 
         return [
-            'status'  => 'success',
+            'status' => 'success',
             'message' => __( 'The draft has been updated successfully.' ),
-            'data'    => [ 'adjustment' => $adjustment ],
+            'data' => [ 'adjustment' => $adjustment ],
         ];
     }
 
     public function executeAdjustment( ProductAdjustment $adjustment )
     {
-        ns()->restrict( [ 'nexopos.make.products-adjustments' ] );
+        ns()->restrict( [ 'nexopos.approve.products-adjustments' ] );
 
         $results = $this->productService->executeAdjustmentDraft( $adjustment );
 
         return [
-            'status'  => 'success',
+            'status' => 'success',
             'message' => __( 'The stock adjustment has been performed successfully.' ),
-            'data'    => $results,
+            'data' => $results,
         ];
     }
 
@@ -825,7 +842,7 @@ class ProductsController extends DashboardController
         $adjustment->delete();
 
         return [
-            'status'  => 'success',
+            'status' => 'success',
             'message' => __( 'The draft adjustment has been deleted.' ),
         ];
     }

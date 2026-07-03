@@ -6,7 +6,7 @@ use App\Models\Order;
 use App\Models\OrderPayment;
 use App\Models\TransactionActionRule;
 use App\Services\TestService;
-use Modules\NsGastro\Tests\TestCase;
+use Tests\TestCase;
 use Tests\Traits\WithAccountingTest;
 use Tests\Traits\WithAuthentication;
 use Tests\Traits\WithOrderTest;

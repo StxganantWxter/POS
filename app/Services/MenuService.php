@@ -255,6 +255,18 @@ class MenuService
                         href: ns()->url( '/dashboard/products/categories/create' )
                     ),
                     AsideMenu::subMenu(
+                        label: __( 'Brands' ),
+                        identifier: 'brands',
+                        permissions: [ 'nexopos.read.brands' ],
+                        href: ns()->url( '/dashboard/products/brands' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Create Brand' ),
+                        identifier: 'create-brands',
+                        permissions: [ 'nexopos.create.brands' ],
+                        href: ns()->url( '/dashboard/products/brands/create' )
+                    ),
+                    AsideMenu::subMenu(
                         label: __( 'Units' ),
                         identifier: 'units',
                         permissions: [ 'nexopos.read.products-units' ],
@@ -454,6 +466,7 @@ class MenuService
                     'nexopos.reports.customers',
                     'nexopos.reports.inventory',
                     'nexopos.reports.payment-types',
+                    'nexopos.reports.gst',
                 ],
                 childrens: AsideMenu::childrens(
                     AsideMenu::subMenu(
@@ -513,6 +526,12 @@ class MenuService
                         identifier: 'payment-types',
                         permissions: [ 'nexopos.reports.payment-types' ],
                         href: ns()->url( '/dashboard/reports/payment-types' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'GST Report' ),
+                        identifier: 'gst-report',
+                        permissions: [ 'nexopos.reports.gst' ],
+                        href: ns()->url( '/dashboard/reports/gst' )
                     ),
                 ),
             ),

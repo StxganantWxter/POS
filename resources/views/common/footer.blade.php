@@ -18,6 +18,7 @@ $json               =   [
     'ns_currency_decimal_separator'     =>  $options->get( 'ns_currency_decimal_separator', '.' ),
     'ns_currency_precision'             =>  $options->get( 'ns_currency_precision', '0' ),
     'ns_currency_prefered'              =>  $options->get( 'ns_currency_prefered', 'iso' ),
+    'ns_currency_numbering'             =>  $options->get( 'ns_currency_numbering', 'international' ),
 ];
 ?>
 <script type="text/javascript">

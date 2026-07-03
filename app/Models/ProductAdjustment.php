@@ -2,20 +2,25 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+
 /**
- * @property int            $id
- * @property int            $author_id
- * @property string|null    $title
- * @property string         $status
- * @property string|null    $description
- * @property \Carbon\Carbon $created_at
- * @property \Carbon\Carbon $updated_at
+ * @property int         $id
+ * @property int         $author_id
+ * @property string|null $title
+ * @property string      $status
+ * @property string|null $description
+ * @property int|null    $approved_by
+ * @property Carbon      $approved_at
+ * @property Carbon      $created_at
+ * @property Carbon      $updated_at
  */
 class ProductAdjustment extends NsModel
 {
     protected $table = 'nexopos_' . 'products_adjustments';
 
-    const STATUS_DRAFT     = 'draft';
+    const STATUS_DRAFT = 'draft';
+
     const STATUS_PERFORMED = 'performed';
 
     protected $fillable = [
@@ -23,6 +28,8 @@ class ProductAdjustment extends NsModel
         'title',
         'status',
         'description',
+        'approved_by',
+        'approved_at',
     ];
 
     public function items()
@@ -33,5 +40,10 @@ class ProductAdjustment extends NsModel
     public function author()
     {
         return $this->belongsTo( User::class, 'author_id' );
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo( User::class, 'approved_by' );
     }
 }

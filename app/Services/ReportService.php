@@ -20,7 +20,6 @@ use App\Models\Role;
 use App\Models\TransactionAccount;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\Resources\Json\PaginatedResourceResponse;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -72,7 +71,7 @@ class ReportService
     /**
      * Will compute the report for the current day
      */
-    public function computeDayReport( string | null $dateStart = null, string | null $dateEnd = null ): DashboardDay
+    public function computeDayReport( ?string $dateStart = null, ?string $dateEnd = null ): DashboardDay
     {
         $this->dayStarts = $dateStart ?: $this->dateService->copy()->startOfDay()->toDateTimeString();
         $this->dayEnds = $dateEnd ?: $this->dateService->copy()->endOfDay()->toDateTimeString();
@@ -368,10 +367,6 @@ class ReportService
 
     /**
      * get from a specific date
-     *
-     * @param  string     $startDate
-     * @param  string     $endDate
-     * @return Collection
      */
     public function getFromTimeRange( string $startDate, string $endDate ): Collection
     {
@@ -415,11 +410,6 @@ class ReportService
 
     /**
      * Will return the products report
-     *
-     * @param  string $startDate
-     * @param  string $endDate
-     * @param  string $sort
-     * @return array
      */
     public function getProductSalesDiff( string $startDate, string $endDate, string $sort ): array
     {
@@ -512,10 +502,6 @@ class ReportService
     /**
      * Will proceed the request to the
      * database that returns the products report
-     *
-     * @param  array  $previousDates
-     * @param  string $sort
-     * @return array
      */
     private function getBestRecords( array $previousDates, string $sort ): array
     {
@@ -841,7 +827,7 @@ class ReportService
     /**
      * Will returns the details for a specific cashier
      */
-    public function getCashierDashboard( int $cashier, string $startDate = null, string $endDate = null ): array
+    public function getCashierDashboard( int $cashier, ?string $startDate = null, ?string $endDate = null ): array
     {
         $cacheKey = 'cashier-report-' . $cashier;
 
@@ -1273,7 +1259,7 @@ class ReportService
     /**
      * Only trigger the job for combined products.
      */
-    public function computeCombinedReport( string | null $date ): array
+    public function computeCombinedReport( ?string $date ): array
     {
         EnsureCombinedProductHistoryExistsJob::dispatch( $date );
 
@@ -1283,7 +1269,7 @@ class ReportService
         ];
     }
 
-    public function getAccountSummaryReport( string | null $startDate = null, string | null $endDate = null ): array
+    public function getAccountSummaryReport( ?string $startDate = null, ?string $endDate = null ): array
     {
         $startDate = $startDate === null ? ns()->date->getNow()->startOfMonth()->toDateTimeString() : $startDate;
         $endDate = $endDate === null ? ns()->date->getNow()->endOfMonth()->toDateTimeString() : $endDate;
@@ -1313,6 +1299,85 @@ class ReportService
             'debits' => $accounts->sum( 'debits' ),
             'credits' => $accounts->sum( 'credits' ),
             'profit' => ns()->currency->define( $accounts->sum( 'credits' ) )->subtractBy( $accounts->sum( 'debits' ) )->toFloat(),
+        ];
+    }
+
+    /**
+     * Builds the GST summary for a period: outward supplies (sales)
+     * grouped by HSN code and tax rate, and inward supplies (purchases)
+     * grouped by tax group. Voided and held orders are excluded, and
+     * refunded lines are ignored.
+     *
+     * @return array{sales: SupportCollection, salesSummary: array, purchases: SupportCollection, purchasesSummary: array}
+     */
+    public function getGstReport( string $startDate, string $endDate ): array
+    {
+        $orderTable = Hook::filter( 'ns-model-table', 'nexopos_orders' );
+        $orderProductTable = Hook::filter( 'ns-model-table', 'nexopos_orders_products' );
+        $procurementTable = Hook::filter( 'ns-model-table', 'nexopos_procurements' );
+        $procurementProductTable = Hook::filter( 'ns-model-table', 'nexopos_procurements_products' );
+        $taxGroupTable = Hook::filter( 'ns-model-table', 'nexopos_taxes_groups' );
+        $prefix = env( 'DB_PREFIX' );
+
+        $sales = DB::table( $orderProductTable )
+            ->join( $orderTable, $orderTable . '.id', '=', $orderProductTable . '.order_id' )
+            ->whereNotIn( $orderTable . '.payment_status', [ Order::PAYMENT_HOLD, Order::PAYMENT_VOID ] )
+            ->where( $orderProductTable . '.status', 'sold' )
+            ->where( $orderTable . '.created_at', '>=', $startDate )
+            ->where( $orderTable . '.created_at', '<=', $endDate )
+            ->groupBy( $orderProductTable . '.hsn_code', $orderProductTable . '.rate' )
+            ->orderBy( $orderProductTable . '.hsn_code' )
+            ->select( [
+                $orderProductTable . '.hsn_code',
+                $orderProductTable . '.rate',
+                DB::raw( 'SUM( ' . $prefix . $orderProductTable . '.quantity ) as quantity' ),
+                DB::raw( 'SUM( ' . $prefix . $orderProductTable . '.total_price_net ) as taxable_value' ),
+                DB::raw( 'SUM( ' . $prefix . $orderProductTable . '.tax_value ) as tax_value' ),
+                DB::raw( 'SUM( ' . $prefix . $orderProductTable . '.total_price ) as total' ),
+            ] )
+            ->get()
+            ->map( function ( $row ) {
+                $row->hsn_code = $row->hsn_code ?: __( 'Not Defined' );
+                $row->cgst = ns()->currency->define( $row->tax_value )->dividedBy( 2 )->toFloat();
+                $row->sgst = $row->cgst;
+
+                return $row;
+            } );
+
+        $purchases = DB::table( $procurementProductTable )
+            ->join( $procurementTable, $procurementTable . '.id', '=', $procurementProductTable . '.procurement_id' )
+            ->leftJoin( $taxGroupTable, $taxGroupTable . '.id', '=', $procurementProductTable . '.tax_group_id' )
+            ->where( $procurementTable . '.created_at', '>=', $startDate )
+            ->where( $procurementTable . '.created_at', '<=', $endDate )
+            ->groupBy( $procurementProductTable . '.tax_group_id', $taxGroupTable . '.name' )
+            ->select( [
+                $procurementProductTable . '.tax_group_id',
+                DB::raw( $prefix . $taxGroupTable . '.name as tax_group_name' ),
+                DB::raw( 'SUM( ' . $prefix . $procurementProductTable . '.quantity ) as quantity' ),
+                DB::raw( 'SUM( ' . $prefix . $procurementProductTable . '.tax_value ) as tax_value' ),
+                DB::raw( 'SUM( ' . $prefix . $procurementProductTable . '.total_purchase_price ) as total' ),
+            ] )
+            ->get()
+            ->map( function ( $row ) {
+                $row->tax_group_name = $row->tax_group_name ?: __( 'Not Defined' );
+                $row->taxable_value = ns()->currency->define( $row->total )->subtractBy( $row->tax_value )->toFloat();
+
+                return $row;
+            } );
+
+        return [
+            'sales' => $sales,
+            'salesSummary' => [
+                'taxable_value' => $sales->sum( 'taxable_value' ),
+                'tax_value' => $sales->sum( 'tax_value' ),
+                'total' => $sales->sum( 'total' ),
+            ],
+            'purchases' => $purchases,
+            'purchasesSummary' => [
+                'taxable_value' => $purchases->sum( 'taxable_value' ),
+                'tax_value' => $purchases->sum( 'tax_value' ),
+                'total' => $purchases->sum( 'total' ),
+            ],
         ];
     }
 }

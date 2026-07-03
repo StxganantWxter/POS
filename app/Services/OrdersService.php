@@ -244,7 +244,7 @@ class OrdersService
      * Will save order installments if
      * it's provider
      *
-     * @param  array $instalments
+     * @param  array                             $instalments
      * @return Collection<OrderInstalment|array>
      */
     public function __saveOrderInstalments( Order $order, $instalments = [] )
@@ -336,9 +336,6 @@ class OrdersService
 
     /**
      * Checks whether the attached coupons are valid
-     *
-     * @param  array $fields
-     * @return void
      */
     public function __checkAttachedCoupons( array $fields ): void
     {
@@ -369,7 +366,7 @@ class OrdersService
         return 0;
     }
 
-    private function __computeCouponValue( array $coupon, float | int $subtotal )
+    private function __computeCouponValue( array $coupon, float|int $subtotal )
     {
         return match ( $coupon[ 'discount_type' ] ) {
             'percentage_discount' => $this->computeDiscountValues( $coupon[ 'discount_value' ], $subtotal ),
@@ -484,8 +481,7 @@ class OrdersService
     /**
      * Assign taxes to the processed order
      *
-     * @param  array $taxes
-     * @return array
+     * @param array $taxes
      */
     public function __registerTaxes( Order $order, $taxes ): array
     {
@@ -506,10 +502,6 @@ class OrdersService
     /**
      * will delete the products belonging to an order
      * that aren't tracked.
-     *
-     * @param  Order $order
-     * @param  SupportCollection $products
-     * @return void
      */
     public function __deleteUntrackedProducts( Order $order, SupportCollection $products ): void
     {
@@ -647,8 +639,6 @@ class OrdersService
     /**
      * get the current shipping
      * feels
-     * @param array $fields
-     * @return float
      */
     private function __getShippingFee( array $fields ): float
     {
@@ -659,8 +649,6 @@ class OrdersService
      * Check whether a discount is valid or
      * not
      *
-     * @param array $fields
-     * @return void
      *
      * @throws NotAllowedException
      */
@@ -699,7 +687,6 @@ class OrdersService
      * Check defined address informations
      * and throw an error if a fields is not supported
      *
-     * @param array $fields
      * @return array $fields
      */
     private function __checkAddressesInformations( array $fields ): array
@@ -742,8 +729,6 @@ class OrdersService
      * Save address informations
      * for a specific order
      *
-     * @param Order $order
-     * @param array $fields
      * @return SupportCollection<OrderAddress>
      */
     private function __saveAddressInformations( Order $order, array $fields ): SupportCollection
@@ -885,10 +870,6 @@ class OrdersService
      * Checks the order payements and compare
      * it to the product values and determine
      * if the order can proceed
-     *
-     * @param array $fields
-     * @param Order|null $order
-     * @param Customer $customer
      */
     private function __checkOrderPayments( array $fields, ?Order $order, Customer $customer )
     {
@@ -1117,6 +1098,7 @@ class OrdersService
             $orderProduct->product_id = $product[ 'product' ]->id ?? 0;
             $orderProduct->product_category_id = $product[ 'product' ]->category_id ?? 0;
             $orderProduct->name = $product[ 'product' ]->name ?? $product[ 'name' ] ?? __( 'Unnamed Product' );
+            $orderProduct->hsn_code = $product[ 'product' ]->hsn_code ?? null;
             $orderProduct->quantity = $product[ 'quantity' ];
             $orderProduct->price_gross = $product[ 'price_gross' ] ?? 0;
             $orderProduct->price_net = $product[ 'price_net' ] ?? 0;
@@ -1236,7 +1218,7 @@ class OrdersService
 
     /**
      * Prebuild order products to be used for order creation or update.
-     * @param array $order
+     *
      * @return SupportCollection<array>
      */
     private function __buildOrderProducts( array $order ): SupportCollection
@@ -1361,11 +1343,11 @@ class OrdersService
          * This will calculate the product default field
          * when they aren't provided.
          */
-        $orderProduct = $this->computeProduct( 
-            rawProduct: $orderProduct, 
-            product: $product, 
+        $orderProduct = $this->computeProduct(
+            rawProduct: $orderProduct,
+            product: $product,
             productUnitQuantity: $productUnitQuantity,
-            rawOrder: $order 
+            rawOrder: $order
         );
 
         $orderProduct[ 'unit_id' ] = $productUnitQuantity->unit->id ?? $orderProduct[ 'unit_id' ] ?? 0;
@@ -1453,7 +1435,7 @@ class OrdersService
         }
     }
 
-    public function computeProduct( array $rawProduct, ?Product $product = null, ?ProductUnitQuantity $productUnitQuantity = null, array $rawOrder )
+    public function computeProduct( array $rawProduct, ?Product $product, ?ProductUnitQuantity $productUnitQuantity, array $rawOrder )
     {
         $sale_price = ( $rawProduct[ 'unit_price' ] ?? $productUnitQuantity->sale_price );
 
@@ -1490,8 +1472,8 @@ class OrdersService
                     price: $sale_price
                 )
             )
-            ->multiplyBy( floatval( $rawProduct[ 'quantity' ] ) )
-            ->toFloat();
+                ->multiplyBy( floatval( $rawProduct[ 'quantity' ] ) )
+                ->toFloat();
         }
 
         /**
@@ -1505,10 +1487,11 @@ class OrdersService
         }
 
         if ( isset( $rawOrder[ 'tax_group_id' ] ) ) {
-            $rate = FacadesCache::remember( 'tax-rate-' . $rawOrder[ 'tax_group_id' ], now()->addMinute(), function() use ( $rawOrder ) {
+            $rate = FacadesCache::remember( 'tax-rate-' . $rawOrder[ 'tax_group_id' ], now()->addMinute(), function () use ( $rawOrder ) {
                 $tax = TaxGroup::with( 'taxes' )->find( $rawOrder[ 'tax_group_id' ] );
+
                 return $tax->taxes->map( fn( Tax $tax ) => $tax->rate )->toArray();
-            });
+            } );
 
             $response = $this->taxService->getTaxesComputed( $rawOrder[ 'tax_type' ], $rate, $rawProduct[ 'unit_price' ] );
 
@@ -1516,7 +1499,7 @@ class OrdersService
                 $rawProduct[ 'price_gross' ] = $response[ 'with-tax' ];
                 $rawProduct[ 'total_price_gross' ] = ns()->currency->define( $rawProduct[ 'price_gross' ] )->multipliedBy( $rawProduct[ 'quantity' ] )->toFloat();
             }
-            
+
             if ( empty( $response[ 'price_net' ] ) ) {
                 $rawProduct[ 'price_net' ] = $response[ 'without-tax' ];
                 $rawProduct[ 'total_price_net' ] = ns()->currency->define( $rawProduct[ 'price_net' ] )->multipliedBy( $rawProduct[ 'quantity' ] )->toFloat();
@@ -1539,22 +1522,35 @@ class OrdersService
     {
         $now = Carbon::parse( $order->created_at );
         $today = $now->toDateString();
-        $count = DB::table( Hook::filter( 'ns-model-table', 'nexopos_orders_count' ) )
-            ->where( 'date', $today )
-            ->value( 'count' );
+        $table = Hook::filter( 'ns-model-table', 'nexopos_orders_count' );
 
-        if ( $count === null ) {
-            $count = 1;
-            DB::table( Hook::filter( 'ns-model-table', 'nexopos_orders_count' ) )
-                ->insert( [
+        /**
+         * the daily counter row is locked while it's incremented, so two
+         * orders registered at the same time can't be assigned the same code.
+         * The stored value always holds the next code to assign, matching
+         * the semantic used since the counter was introduced.
+         */
+        $count = DB::transaction( function () use ( $table, $today ) {
+            $row = DB::table( $table )
+                ->where( 'date', $today )
+                ->lockForUpdate()
+                ->first();
+
+            if ( $row === null ) {
+                DB::table( $table )->insert( [
                     'date' => $today,
-                    'count' => $count,
+                    'count' => 2,
                 ] );
-        }
 
-        DB::table( Hook::filter( 'ns-model-table', 'nexopos_orders_count' ) )
-            ->where( 'date', $today )
-            ->increment( 'count' );
+                return 1;
+            }
+
+            DB::table( $table )
+                ->where( 'date', $today )
+                ->update( [ 'count' => $row->count + 1 ] );
+
+            return $row->count;
+        } );
 
         return $now->format( 'y' ) . $now->format( 'm' ) . $now->format( 'd' ) . '-' . str_pad( $count, 3, 0, STR_PAD_LEFT );
     }
@@ -2622,6 +2618,10 @@ class OrdersService
             'store_name' => ns()->option->get( 'ns_store_name' ),
             'store_email' => ns()->option->get( 'ns_store_email' ),
             'store_phone' => ns()->option->get( 'ns_store_phone' ),
+            'store_gstin' => ns()->option->get( 'ns_store_gstin' ),
+            'store_fssai' => ns()->option->get( 'ns_store_fssai_license' ),
+            'store_excise_license' => ns()->option->get( 'ns_store_excise_license' ),
+            'customer_gstin' => $order->customer->gstin ?? '',
             'cashier_name' => $order->user->username,
             'cashier_id' => $order->author_id,
             'order_code' => $order->code,

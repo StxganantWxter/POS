@@ -272,6 +272,12 @@ class CustomerCrud extends CrudService
                             value: $entry->pobox ?? '',
                             description: __( 'Provide the customer PO.Box' ),
                         ),
+                        FormInput::text(
+                            label: __( 'GSTIN' ),
+                            name: 'gstin',
+                            value: $entry->gstin ?? '',
+                            description: __( 'Provide the customer GST identification number for B2B invoices.' ),
+                        ),
                         FormInput::select(
                             options: Helper::kvToJsOptions( [
                                 '' => __( 'Not Defined' ),

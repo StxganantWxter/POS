@@ -11,6 +11,7 @@
     </testsuite>
     <testsuite name="Parallel-1">
       <directory suffix="ExceptionsTest.php">./tests/Feature</directory>
+      <directory suffix="CurrencyFormattingTest.php">./tests/Feature</directory>
       <directory suffix="TestAllDateTimeOptions.php">./tests/Feature</directory>
       <directory suffix="CrudTest.php">./tests/Feature</directory>
       <directory suffix="FieldsTest.php">./tests/Feature</directory>
@@ -43,6 +44,10 @@
       <directory suffix="TestRewardSystem.php">./tests/Feature</directory>
       <directory suffix="PerformStockAdjustmentTest.php">./tests/Feature</directory>
       <directory suffix="ProductAdjustmentTest.php">./tests/Feature</directory>
+      <directory suffix="StockLedgerIntegrityTest.php">./tests/Feature</directory>
+      <directory suffix="LiquorCatalogTest.php">./tests/Feature</directory>
+      <directory suffix="GstReportTest.php">./tests/Feature</directory>
+      <directory suffix="LiquorSetupCommandTest.php">./tests/Feature</directory>
       <directory suffix="CreateRegisterTest.php">./tests/Feature</directory>
       <directory suffix="CashRegisterActionsTest.php">./tests/Feature</directory>
     </testsuite>

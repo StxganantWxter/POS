@@ -231,6 +231,21 @@ class ReportsController extends DashboardController
         );
     }
 
+    public function gstReport( Request $request )
+    {
+        ns()->restrict( [ 'nexopos.reports.gst' ] );
+
+        $startDate = $request->input( 'startDate' ) ?: ns()->date->getNow()->startOfMonth()->toDateTimeString();
+        $endDate = $request->input( 'endDate' ) ?: ns()->date->getNow()->endOfMonth()->toDateTimeString();
+
+        return View::make( 'pages.dashboard.reports.gst-report', array_merge( [
+            'title' => __( 'GST Report' ),
+            'description' => __( 'Summarizes outward and inward supplies with their GST breakdown for a specific period.' ),
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ], $this->reportService->getGstReport( $startDate, $endDate ) ) );
+    }
+
     public function showCustomerStatement()
     {
         return View::make( 'pages.dashboard.reports.customers-statement', [
