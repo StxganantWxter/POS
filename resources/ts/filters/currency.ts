@@ -8,6 +8,32 @@ declare const window;
 const precision     =   ( new Array( parseInt( ns.currency.ns_currency_precision ) ) ).fill('').map( _ => 0 ).join('');
 
 /**
+ * Format a raw number using the indian numbering system:
+ * the last three digits are grouped together, every other
+ * group counts two digits (eg: 12,34,567.89).
+ * @param value the value to format
+ * @returns string
+ */
+const formatIndianNumber    =   ( value ) => {
+    const amount        =   Number( value ) || 0;
+    const digits        =   parseInt( ns.currency.ns_currency_precision );
+    const fixed         =   Math.abs( amount ).toFixed( digits );
+    const [ integers, decimals ]    =   fixed.split( '.' );
+
+    let grouped     =   integers;
+
+    if ( integers.length > 3 ) {
+        const lastThree     =   integers.slice( -3 );
+        const remaining     =   integers.slice( 0, -3 )
+            .replace( /\B(?=(\d{2})+(?!\d))/g, ns.currency.ns_currency_thousand_separator );
+
+        grouped     =   remaining + ns.currency.ns_currency_thousand_separator + lastThree;
+    }
+
+    return ( amount < 0 ? '-' : '' ) + grouped + ( decimals !== undefined ? ns.currency.ns_currency_decimal_separator + decimals : '' );
+}
+
+/**
  * Convert a number into a currency format.
  * @param value the value to convert
  * @param format amount format
@@ -29,14 +55,18 @@ const nsCurrency    =   ( value, format = 'full', locale = 'en' ) => {
     let newValue;
 
     if ( format === 'full' ) {
-        const config            =   {
-            decimal: ns.currency.ns_currency_decimal_separator,
-            separator: ns.currency.ns_currency_thousand_separator,
-            precision : parseInt( ns.currency.ns_currency_precision ),
-            symbol: ''
-        };
-    
-        newValue    =   currency( value, config ).format();
+        if ( ns.currency.ns_currency_numbering === 'indian' ) {
+            newValue    =   formatIndianNumber( value );
+        } else {
+            const config            =   {
+                decimal: ns.currency.ns_currency_decimal_separator,
+                separator: ns.currency.ns_currency_thousand_separator,
+                precision : parseInt( ns.currency.ns_currency_precision ),
+                symbol: ''
+            };
+
+            newValue    =   currency( value, config ).format();
+        }
     } else {
         newValue    =   NumeralJS( value ).format( '0.0a' );
     }

@@ -27,6 +27,8 @@ class CurrencyService
 
     private $decimal_separator;
 
+    private $numbering_system;
+
     private static $_currency_iso = 'USD';
 
     private static $_currency_symbol = '$';
@@ -41,6 +43,12 @@ class CurrencyService
 
     private static $_prefered_currency = 'iso';
 
+    private static $_numbering_system = 'international';
+
+    const NUMBERING_INTERNATIONAL = 'international';
+
+    const NUMBERING_INDIAN = 'indian';
+
     public function __construct( $value, $config = [] )
     {
         extract( $config );
@@ -52,6 +60,7 @@ class CurrencyService
         $this->decimal_separator = $decimal_separator ?? self::$_decimal_separator;
         $this->prefered_currency = $prefered_currency ?? self::$_prefered_currency;
         $this->thousand_separator = $thousand_separator ?? self::$_thousand_separator;
+        $this->numbering_system = $numbering_system ?? self::$_numbering_system;
 
         $this->value = BigDecimal::of( $value );
     }
@@ -73,6 +82,7 @@ class CurrencyService
             'decimal_separator' => $this->decimal_separator,
             'prefered_currency' => $this->prefered_currency,
             'thousand_separator' => $this->thousand_separator,
+            'numbering_system' => $this->numbering_system,
         ] );
     }
 
@@ -169,17 +179,47 @@ class CurrencyService
     public function format(): string
     {
         $currency = $this->prefered_currency === 'iso' ? $this->currency_iso : $this->currency_symbol;
-        $final = sprintf( '%s ' . number_format(
-            floatval( (string) ( $this->value ) ),
-            $this->decimal_precision,
-            $this->decimal_separator,
-            $this->thousand_separator
-        ) . ' %s',
+        $final = sprintf( '%s ' . $this->formatNumber( floatval( (string) ( $this->value ) ) ) . ' %s',
             $this->currency_position === 'before' ? $currency : '',
             $this->currency_position === 'after' ? $currency : ''
         );
 
         return $final;
+    }
+
+    /**
+     * Format a number according to the configured numbering system.
+     * The indian system groups the last three digits then pairs of
+     * two digits (eg: 12,34,567.89), while the international system
+     * uses uniform groups of three digits (eg: 1,234,567.89).
+     */
+    private function formatNumber( float $value ): string
+    {
+        if ( $this->numbering_system !== self::NUMBERING_INDIAN ) {
+            return number_format(
+                $value,
+                $this->decimal_precision,
+                $this->decimal_separator,
+                $this->thousand_separator
+            );
+        }
+
+        $plain = number_format( abs( $value ), $this->decimal_precision, '.', '' );
+
+        [ $integers, $decimals ] = array_pad( explode( '.', $plain, 2 ), 2, null );
+
+        if ( strlen( $integers ) > 3 ) {
+            $lastThree = substr( $integers, -3 );
+            $remaining = preg_replace(
+                '/\B(?=(\d{2})+(?!\d))/',
+                $this->thousand_separator,
+                substr( $integers, 0, -3 )
+            );
+
+            $integers = $remaining . $this->thousand_separator . $lastThree;
+        }
+
+        return ( $value < 0 ? '-' : '' ) . $integers . ( $decimals !== null ? $this->decimal_separator . $decimals : '' );
     }
 
     /**

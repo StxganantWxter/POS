@@ -164,6 +164,21 @@ class GeneralSettings extends SettingsPage
                     label: __( 'Preferred Currency' ),
                     description: __( 'Determine what is the currency indicator that should be used.' ),
                 ),
+                FormInput::select(
+                    name: 'ns_currency_numbering',
+                    value: ns()->option->get( 'ns_currency_numbering', 'international' ),
+                    options: [
+                        [
+                            'label' => __( 'International (1,234,567.89)' ),
+                            'value' => 'international',
+                        ], [
+                            'label' => __( 'Indian (12,34,567.89)' ),
+                            'value' => 'indian',
+                        ],
+                    ],
+                    label: __( 'Numbering System' ),
+                    description: __( 'Define how digits are grouped when displaying amounts.' ),
+                ),
                 FormInput::text(
                     name: 'ns_currency_thousand_separator',
                     value: ns()->option->get( 'ns_currency_thousand_separator' ),

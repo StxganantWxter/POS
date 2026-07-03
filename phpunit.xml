@@ -11,6 +11,7 @@
     </testsuite>
     <testsuite name="Parallel-1">
       <directory suffix="ExceptionsTest.php">./tests/Feature</directory>
+      <directory suffix="CurrencyFormattingTest.php">./tests/Feature</directory>
       <directory suffix="TestAllDateTimeOptions.php">./tests/Feature</directory>
       <directory suffix="CrudTest.php">./tests/Feature</directory>
       <directory suffix="FieldsTest.php">./tests/Feature</directory>
