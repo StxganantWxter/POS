@@ -17,6 +17,9 @@ Route::get( '/products/categories', [ CategoryController::class, 'listCategories
 Route::get( '/products/categories/create', [ CategoryController::class, 'createCategory' ] )->name( ns()->routeName( 'ns.dashboard.products.categories.create' ) );
 Route::get( '/products/categories/edit/{category}', [ CategoryController::class, 'editCategory' ] )->name( ns()->routeName( 'ns.dashboard.categories.edit' ) );
 Route::get( '/products/categories/compute-products/{category}', [ CategoryController::class, 'computeCategoryProducts' ] )->name( ns()->routeName( 'ns.dashboard.products.categories.compute' ) );
+Route::get( '/products/brands', [ ProductsController::class, 'listBrands' ] )->name( ns()->routeName( 'ns.dashboard.products.brands' ) );
+Route::get( '/products/brands/create', [ ProductsController::class, 'createBrand' ] )->name( ns()->routeName( 'ns.dashboard.products.brands.create' ) );
+Route::get( '/products/brands/edit/{brand}', [ ProductsController::class, 'editBrand' ] )->name( ns()->routeName( 'ns.dashboard.products.brands.edit' ) );
 Route::get( '/products/stock-flow-records', [ CategoryController::class, 'showStockFlowCrud' ] )->name( ns()->routeName( 'ns.dashboard.products.stock-flow-records' ) );
 Route::get( '/products/scale-range', [ ProductsController::class, 'getScaleRange' ] )->name( ns()->routeName( 'ns.dashboard.products.scale-range' ) );
 Route::get( '/products/scale-range/create', [ ProductsController::class, 'createScaleRange' ] )->name( ns()->routeName( 'ns.dashboard.products.scale-range.create' ) );

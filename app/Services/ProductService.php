@@ -719,6 +719,14 @@ class ProductService
         extract( $data );
 
         if ( ! in_array( $field, [ 'units', 'images', 'groups' ] ) && ! is_array( $value ) ) {
+            /**
+             * numeric nullable fields might be submitted as empty
+             * strings which aren't accepted on strict SQL modes.
+             */
+            if ( in_array( $field, [ 'brand_id', 'alcohol_percentage', 'volume_ml' ] ) && $value === '' ) {
+                $value = null;
+            }
+
             $product->$field = $value;
         } elseif ( $field === 'units' ) {
             $product->unit_group = $fields[ 'units' ][ 'unit_group' ];
@@ -756,6 +764,7 @@ class ProductService
                 $unitQuantity->stock_alert_enabled = $group[ 'stock_alert_enabled' ] ?? false;
                 $unitQuantity->convert_unit_id = $group[ 'convert_unit_id' ] ?? null;
                 $unitQuantity->cogs = $group[ 'cogs' ] ?? 0;
+                $unitQuantity->mrp = $this->currency->define( $group[ 'mrp' ] ?? 0 )->toFloat();
                 $unitQuantity->visible = $group[ 'visible' ] ?? true;
 
                 /**

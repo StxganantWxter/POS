@@ -255,6 +255,18 @@ class MenuService
                         href: ns()->url( '/dashboard/products/categories/create' )
                     ),
                     AsideMenu::subMenu(
+                        label: __( 'Brands' ),
+                        identifier: 'brands',
+                        permissions: [ 'nexopos.read.brands' ],
+                        href: ns()->url( '/dashboard/products/brands' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'Create Brand' ),
+                        identifier: 'create-brands',
+                        permissions: [ 'nexopos.create.brands' ],
+                        href: ns()->url( '/dashboard/products/brands/create' )
+                    ),
+                    AsideMenu::subMenu(
                         label: __( 'Units' ),
                         identifier: 'units',
                         permissions: [ 'nexopos.read.products-units' ],

@@ -7,6 +7,7 @@ use App\Casts\ProductTypeCast;
 use App\Classes\CrudForm;
 use App\Classes\FormInput;
 use App\Exceptions\NotAllowedException;
+use App\Models\Brand;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductUnitQuantity;
@@ -232,6 +233,13 @@ class ProductCrud extends CrudService
             ),
             FormInput::number(
                 errors: [],
+                label: __( 'MRP' ),
+                name: 'mrp',
+                value: 0,
+                description: __( 'Define the Maximum Retail Price printed on the bottle.' ),
+            ),
+            FormInput::number(
+                errors: [],
                 label: __( 'COGS' ),
                 name: 'cogs',
                 value: '',
@@ -319,6 +327,33 @@ class ProductCrud extends CrudService
                                     'label' => __( 'Category' ),
                                     'validation' => 'required',
                                     'value' => $entry->category_id ?? '',
+                                ], [
+                                    'type' => 'search-select',
+                                    'component' => 'nsCrudForm',
+                                    'props' => BrandCrud::getFormConfig(),
+                                    'description' => __( 'Select the brand the product belongs to.' ),
+                                    'options' => Helper::toJsOptions( Brand::get(), [ 'id', 'name' ] ),
+                                    'name' => 'brand_id',
+                                    'label' => __( 'Brand' ),
+                                    'value' => $entry->brand_id ?? '',
+                                ], [
+                                    'type' => 'text',
+                                    'name' => 'hsn_code',
+                                    'description' => __( 'Define the HSN code used on GST invoices and reports.' ),
+                                    'label' => __( 'HSN Code' ),
+                                    'value' => $entry->hsn_code ?? '',
+                                ], [
+                                    'type' => 'number',
+                                    'name' => 'alcohol_percentage',
+                                    'description' => __( 'Define the alcohol strength (ABV %) of the product.' ),
+                                    'label' => __( 'Alcohol %' ),
+                                    'value' => $entry->alcohol_percentage ?? '',
+                                ], [
+                                    'type' => 'number',
+                                    'name' => 'volume_ml',
+                                    'description' => __( 'Define the bottle volume in milliliters (ML).' ),
+                                    'label' => __( 'Volume (ML)' ),
+                                    'value' => $entry->volume_ml ?? '',
                                 ], [
                                     'type' => 'text',
                                     'name' => 'barcode',

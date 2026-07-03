@@ -111,6 +111,11 @@ class Product extends NsModel
         return $this->belongsTo( ProductCategory::class, 'category_id', 'id' );
     }
 
+    public function brand()
+    {
+        return $this->belongsTo( Brand::class, 'brand_id', 'id' );
+    }
+
     /**
      * get products having accurate tracking enabled
      *
