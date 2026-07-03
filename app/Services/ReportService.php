@@ -1322,14 +1322,26 @@ class ReportService
         $sales = DB::table( $orderProductTable )
             ->join( $orderTable, $orderTable . '.id', '=', $orderProductTable . '.order_id' )
             ->whereNotIn( $orderTable . '.payment_status', [ Order::PAYMENT_HOLD, Order::PAYMENT_VOID ] )
-            ->where( $orderProductTable . '.status', 'sold' )
+            /**
+             * refunds reduce an order product's quantity and tax to the kept
+             * (net) portion and flip its status to 'returned'; that net supply
+             * must remain reported, so we include every line that still carries
+             * quantity rather than filtering on the 'sold' status.
+             */
+            ->where( $orderProductTable . '.quantity', '>', 0 )
             ->where( $orderTable . '.created_at', '>=', $startDate )
             ->where( $orderTable . '.created_at', '<=', $endDate )
-            ->groupBy( $orderProductTable . '.hsn_code', $orderProductTable . '.rate' )
+            /**
+             * the tax percentage is not reliably persisted on
+             * order_products.rate, so lines are grouped by their tax group
+             * and the effective rate is derived from the tax and taxable
+             * values below.
+             */
+            ->groupBy( $orderProductTable . '.hsn_code', $orderProductTable . '.tax_group_id' )
             ->orderBy( $orderProductTable . '.hsn_code' )
             ->select( [
                 $orderProductTable . '.hsn_code',
-                $orderProductTable . '.rate',
+                $orderProductTable . '.tax_group_id',
                 DB::raw( 'SUM( ' . $prefix . $orderProductTable . '.quantity ) as quantity' ),
                 DB::raw( 'SUM( ' . $prefix . $orderProductTable . '.total_price_net ) as taxable_value' ),
                 DB::raw( 'SUM( ' . $prefix . $orderProductTable . '.tax_value ) as tax_value' ),
@@ -1338,6 +1350,9 @@ class ReportService
             ->get()
             ->map( function ( $row ) {
                 $row->hsn_code = $row->hsn_code ?: __( 'Not Defined' );
+                $row->rate = $row->taxable_value > 0
+                    ? round( $row->tax_value / $row->taxable_value * 100, 2 )
+                    : 0;
                 $row->cgst = ns()->currency->define( $row->tax_value )->dividedBy( 2 )->toFloat();
                 $row->sgst = $row->cgst;
 
