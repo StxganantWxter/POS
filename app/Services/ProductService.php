@@ -2541,7 +2541,11 @@ class ProductService
                 ] );
             }
 
-            $adjustment->update( [ 'status' => ProductAdjustment::STATUS_PERFORMED ] );
+            $adjustment->update( [
+                'status' => ProductAdjustment::STATUS_PERFORMED,
+                'approved_by' => Auth::id(),
+                'approved_at' => ns()->date->getNow()->toDateTimeString(),
+            ] );
 
             return $results;
         } );

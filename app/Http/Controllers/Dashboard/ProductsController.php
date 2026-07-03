@@ -819,7 +819,7 @@ class ProductsController extends DashboardController
 
     public function executeAdjustment( ProductAdjustment $adjustment )
     {
-        ns()->restrict( [ 'nexopos.make.products-adjustments' ] );
+        ns()->restrict( [ 'nexopos.approve.products-adjustments' ] );
 
         $results = $this->productService->executeAdjustmentDraft( $adjustment );
 

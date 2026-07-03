@@ -121,7 +121,12 @@ class StockLedgerIntegrityTest extends TestCase
 
         $this->assertInstanceOf( ProductHistory::class, $history );
         $this->assertEquals( 'Breakage while stacking', $history->description );
-        $this->assertEquals( ProductAdjustment::STATUS_PERFORMED, $adjustment->fresh()->status );
+
+        $adjustment = $adjustment->fresh();
+
+        $this->assertEquals( ProductAdjustment::STATUS_PERFORMED, $adjustment->status );
+        $this->assertNotNull( $adjustment->approved_by, 'The approver should be recorded on the executed batch.' );
+        $this->assertNotNull( $adjustment->approved_at, 'The approval date should be recorded on the executed batch.' );
     }
 
     public function test_failed_adjustment_batch_is_fully_rolled_back()

@@ -23,6 +23,11 @@ class Brand extends NsModel
         return $this->hasMany( Product::class, 'brand_id' );
     }
 
+    public function author()
+    {
+        return $this->belongsTo( User::class, 'author_id' );
+    }
+
     public function scopeFindLike( $query, $name )
     {
         return $query->where( 'name', 'like', '%' . $name . '%' );

@@ -60,6 +60,7 @@ class CurrencyFormattingTest extends TestCase
             'ns_currency_numbering' => CurrencyService::NUMBERING_INDIAN,
             'ns_currency_thousand_separator' => ',',
             'ns_currency_decimal_separator' => '.',
+            'ns_currency_precision' => 2,
         ];
 
         $previousValues = collect( $impactedOptions )
