@@ -466,6 +466,7 @@ class MenuService
                     'nexopos.reports.customers',
                     'nexopos.reports.inventory',
                     'nexopos.reports.payment-types',
+                    'nexopos.reports.gst',
                 ],
                 childrens: AsideMenu::childrens(
                     AsideMenu::subMenu(
@@ -525,6 +526,12 @@ class MenuService
                         identifier: 'payment-types',
                         permissions: [ 'nexopos.reports.payment-types' ],
                         href: ns()->url( '/dashboard/reports/payment-types' )
+                    ),
+                    AsideMenu::subMenu(
+                        label: __( 'GST Report' ),
+                        identifier: 'gst-report',
+                        permissions: [ 'nexopos.reports.gst' ],
+                        href: ns()->url( '/dashboard/reports/gst' )
                     ),
                 ),
             ),

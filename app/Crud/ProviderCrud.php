@@ -166,6 +166,12 @@ class ProviderCrud extends CrudService
                             'value' => $entry->phone ?? '',
                         ], [
                             'type' => 'text',
+                            'name' => 'gstin',
+                            'label' => __( 'GSTIN' ),
+                            'description' => __( 'Provide the provider GST identification number.' ),
+                            'value' => $entry->gstin ?? '',
+                        ], [
+                            'type' => 'text',
                             'name' => 'address_1',
                             'label' => __( 'Address 1' ),
                             'description' => __( 'First address of the provider.' ),

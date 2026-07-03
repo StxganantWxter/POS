@@ -1098,6 +1098,7 @@ class OrdersService
             $orderProduct->product_id = $product[ 'product' ]->id ?? 0;
             $orderProduct->product_category_id = $product[ 'product' ]->category_id ?? 0;
             $orderProduct->name = $product[ 'product' ]->name ?? $product[ 'name' ] ?? __( 'Unnamed Product' );
+            $orderProduct->hsn_code = $product[ 'product' ]->hsn_code ?? null;
             $orderProduct->quantity = $product[ 'quantity' ];
             $orderProduct->price_gross = $product[ 'price_gross' ] ?? 0;
             $orderProduct->price_net = $product[ 'price_net' ] ?? 0;
@@ -2617,6 +2618,10 @@ class OrdersService
             'store_name' => ns()->option->get( 'ns_store_name' ),
             'store_email' => ns()->option->get( 'ns_store_email' ),
             'store_phone' => ns()->option->get( 'ns_store_phone' ),
+            'store_gstin' => ns()->option->get( 'ns_store_gstin' ),
+            'store_fssai' => ns()->option->get( 'ns_store_fssai_license' ),
+            'store_excise_license' => ns()->option->get( 'ns_store_excise_license' ),
+            'customer_gstin' => $order->customer->gstin ?? '',
             'cashier_name' => $order->user->username,
             'cashier_id' => $order->author_id,
             'order_code' => $order->code,

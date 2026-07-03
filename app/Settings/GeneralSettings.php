@@ -73,6 +73,24 @@ class GeneralSettings extends SettingsPage
                     description: __( 'The store mail box number.' ),
                 ),
                 FormInput::text(
+                    name: 'ns_store_gstin',
+                    value: ns()->option->get( 'ns_store_gstin' ),
+                    label: __( 'Store GSTIN' ),
+                    description: __( 'The GST identification number printed on invoices. Also available as {store_gstin} on receipt templates.' ),
+                ),
+                FormInput::text(
+                    name: 'ns_store_fssai_license',
+                    value: ns()->option->get( 'ns_store_fssai_license' ),
+                    label: __( 'FSSAI License' ),
+                    description: __( 'The FSSAI license number. Available as {store_fssai} on receipt templates.' ),
+                ),
+                FormInput::text(
+                    name: 'ns_store_excise_license',
+                    value: ns()->option->get( 'ns_store_excise_license' ),
+                    label: __( 'Excise License' ),
+                    description: __( 'The state excise license number. Available as {store_excise_license} on receipt templates.' ),
+                ),
+                FormInput::text(
                     name: 'ns_store_fax',
                     value: ns()->option->get( 'ns_store_fax' ),
                     label: __( 'Store Fax' ),

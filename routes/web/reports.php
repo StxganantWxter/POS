@@ -13,3 +13,4 @@ Route::get( '/reports/transactions', [ ReportsController::class, 'transactionsRe
 Route::get( '/reports/annual-report', [ ReportsController::class, 'annualReport' ] )->name( ns()->routeName( 'ns.dashboard.reports-annual' ) ); // @todo update
 Route::get( '/reports/payment-types', [ ReportsController::class, 'salesByPaymentTypes' ] )->name( ns()->routeName( 'ns.dashboard.reports.payment-types' ) );
 Route::get( '/reports/customers-statement', [ ReportsController::class, 'showCustomerStatement' ] )->name( ns()->routeName( 'ns.dashboard.reports.customers-statement' ) );
+Route::get( '/reports/gst', [ ReportsController::class, 'gstReport' ] )->name( ns()->routeName( 'ns.dashboard.reports.gst' ) );
